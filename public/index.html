@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>DataBridge – Connect</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080c14;--surface:#0d1520;--border:#1a2e48;--border2:#243d5c;
+  --accent:#00d4ff;--accent2:#00ff9d;--warn:#ff6b35;--danger:#ff3e6c;
+  --text:#c8dff0;--muted:#4a6a8a;
+  --glow:0 0 20px rgba(0,212,255,.35);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  min-height:100vh;background:var(--bg);
+  font-family:'Exo 2',sans-serif;color:var(--text);
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+}
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(0,212,255,.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,212,255,.04) 1px,transparent 1px);
+  background-size:40px 40px;
+  animation:gridMove 20s linear infinite;pointer-events:none;
+}
+@keyframes gridMove{to{background-position:40px 40px}}
+.corner{position:fixed;width:80px;height:80px;opacity:.4}
+.corner.tl{top:16px;left:16px;border-top:2px solid var(--accent);border-left:2px solid var(--accent)}
+.corner.tr{top:16px;right:16px;border-top:2px solid var(--accent);border-right:2px solid var(--accent)}
+.corner.bl{bottom:16px;left:16px;border-bottom:2px solid var(--accent);border-left:2px solid var(--accent)}
+.corner.br{bottom:16px;right:16px;border-bottom:2px solid var(--accent);border-right:2px solid var(--accent)}
+
+.card{
+  width:min(500px,94vw);
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:16px;padding:36px 32px;
+  animation:cardIn .6s cubic-bezier(.16,1,.3,1);
+}
+@keyframes cardIn{from{opacity:0;transform:translateY(30px)}}
+
+.logo{display:flex;align-items:center;gap:12px;margin-bottom:4px}
+.logo-icon{
+  width:44px;height:44px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  border-radius:10px;display:flex;align-items:center;justify-content:center;
+  font-size:22px;box-shadow:var(--glow);
+}
+.logo-text{
+  font-family:'Rajdhani',sans-serif;font-size:28px;font-weight:700;letter-spacing:2px;
+  background:linear-gradient(90deg,var(--accent),var(--accent2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.tagline{font-size:11px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:28px}
+
+/* Link cards */
+.link-card{
+  background:#060d18;border:1px solid var(--border);
+  border-radius:10px;padding:12px 14px;margin-bottom:10px;
+}
+.link-header{
+  display:flex;align-items:center;gap:8px;margin-bottom:8px;
+}
+.link-badge{
+  font-size:10px;font-weight:700;letter-spacing:1.5px;
+  text-transform:uppercase;padding:2px 8px;border-radius:10px;
+}
+.badge-lan{background:rgba(0,212,255,.15);color:var(--accent);border:1px solid rgba(0,212,255,.3)}
+.badge-public{background:rgba(0,255,157,.15);color:var(--accent2);border:1px solid rgba(0,255,157,.3)}
+.badge-local{background:rgba(74,106,138,.15);color:var(--muted);border:1px solid rgba(74,106,138,.3)}
+.link-desc{font-size:11px;color:var(--muted)}
+.link-row{display:flex;align-items:center;gap:8px}
+.link-val{
+  font-family:'Share Tech Mono',monospace;font-size:13px;
+  flex:1;word-break:break-all;
+}
+.link-val.lan{color:var(--accent)}
+.link-val.pub{color:var(--accent2)}
+.link-val.loc{color:var(--muted)}
+.copy-btn{
+  flex-shrink:0;background:transparent;border:1px solid currentColor;
+  border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;
+  font-family:'Rajdhani',sans-serif;font-weight:600;letter-spacing:1px;
+  transition:all .2s;
+}
+.copy-btn.cyan{color:var(--accent)}
+.copy-btn.cyan:hover{background:var(--accent);color:#000}
+.copy-btn.green{color:var(--accent2)}
+.copy-btn.green:hover{background:var(--accent2);color:#000}
+.copy-btn.copied{background:var(--accent2)!important;border-color:var(--accent2)!important;color:#000!important}
+
+.ngrok-tip{
+  background:rgba(255,107,53,.08);border:1px solid rgba(255,107,53,.25);
+  border-radius:8px;padding:10px 12px;margin-bottom:18px;
+  font-size:12px;color:var(--warn);line-height:1.6;
+  display:none;
+}
+.ngrok-tip.show{display:block}
+
+.divider{border:none;border-top:1px solid var(--border);margin:20px 0}
+
+label{
+  display:block;font-size:11px;color:var(--muted);
+  letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;
+}
+input[type=text]{
+  width:100%;background:#060d18;border:1px solid var(--border);
+  border-radius:8px;padding:12px 16px;color:var(--text);
+  font-size:16px;font-family:'Exo 2',sans-serif;outline:none;
+  transition:border-color .2s,box-shadow .2s;margin-bottom:20px;
+}
+input[type=text]:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,212,255,.15)}
+
+.join-btn{
+  width:100%;padding:14px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  border:none;border-radius:8px;
+  font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;
+  letter-spacing:2px;color:#000;cursor:pointer;
+  transition:opacity .2s,transform .1s;box-shadow:var(--glow);
+}
+.join-btn:hover{opacity:.88;transform:translateY(-1px)}
+.join-btn:active{transform:translateY(0)}
+
+.capacity{
+  display:flex;justify-content:center;gap:8px;margin-top:18px;align-items:center;
+}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--border);transition:background .3s}
+.dot.active{background:var(--accent2);box-shadow:0 0 6px var(--accent2)}
+.cap-label{font-size:11px;color:var(--muted);letter-spacing:1px;margin-left:6px}
+.error-msg{color:var(--warn);font-size:13px;text-align:center;margin-top:12px;display:none}
+</style>
+</head>
+<body>
+<div class="corner tl"></div><div class="corner tr"></div>
+<div class="corner bl"></div><div class="corner br"></div>
+
+<div class="card">
+  <div class="logo">
+    <div class="logo-icon">⚡</div>
+    <div class="logo-text">DATABRIDGE</div>
+  </div>
+  <div class="tagline">Transfer anything · Anywhere · Anyone</div>
+
+  <!-- LAN link -->
+  <div class="link-card">
+    <div class="link-header">
+      <span class="link-badge badge-lan">📡 LAN / WiFi</span>
+      <span class="link-desc">Same network devices</span>
+    </div>
+    <div class="link-row">
+      <div class="link-val lan" id="lanVal">Loading...</div>
+      <button class="copy-btn cyan" onclick="copyLink('lanVal',this)">Copy</button>
+    </div>
+  </div>
+
+  <!-- Public ngrok link -->
+  <div class="link-card" id="pubCard">
+    <div class="link-header">
+      <span class="link-badge badge-public">🌍 PUBLIC (Internet)</span>
+      <span class="link-desc">Any device, any location</span>
+    </div>
+    <div class="link-row">
+      <div class="link-val pub" id="pubVal">Not active yet...</div>
+      <button class="copy-btn green" id="pubCopyBtn" onclick="copyLink('pubVal',this)" disabled>Copy</button>
+    </div>
+  </div>
+
+  <!-- ngrok tip shown if no public URL -->
+  <div class="ngrok-tip" id="ngrokTip">
+    ⚠️ Public URL not active. To enable internet access:<br>
+    1. Open <b>server.js</b><br>
+    2. Find <code>PASTE_YOUR_NGROK_AUTHTOKEN_HERE</code><br>
+    3. Replace with your token from <b>dashboard.ngrok.com/get-started/your-authtoken</b><br>
+    4. Restart: <code>node server.js</code>
+  </div>
+
+  <hr class="divider">
+
+  <label for="nameInput">Your Name</label>
+  <input type="text" id="nameInput" placeholder="Enter your name..." maxlength="20" autocomplete="off"/>
+  <button class="join-btn" onclick="joinChat()">ENTER  →</button>
+
+  <div class="capacity">
+    <div class="dot" id="d0"></div><div class="dot" id="d1"></div>
+    <div class="dot" id="d2"></div><div class="dot" id="d3"></div>
+    <div class="dot" id="d4"></div>
+    <span class="cap-label" id="capLabel">0 / 5 online</span>
+  </div>
+  <div class="error-msg" id="errMsg"></div>
+</div>
+
+<script>
+async function loadInfo() {
+  try {
+    const r = await fetch('/api/info');
+    const d = await r.json();
+
+    document.getElementById('lanVal').textContent = d.lan || window.location.origin;
+
+    if (d.public) {
+      document.getElementById('pubVal').textContent = d.public;
+      document.getElementById('pubCopyBtn').disabled = false;
+      document.getElementById('ngrokTip').classList.remove('show');
+    } else {
+      document.getElementById('pubVal').textContent = 'Not started – see tip below';
+      document.getElementById('ngrokTip').classList.add('show');
+    }
+  } catch(e) {
+    document.getElementById('lanVal').textContent = window.location.origin;
+    document.getElementById('ngrokTip').classList.add('show');
+  }
+}
+
+async function loadUsers() {
+  try {
+    const r = await fetch('/api/users');
+    const users = await r.json();
+    const n = users.length;
+    for (let i = 0; i < 5; i++)
+      document.getElementById('d'+i).classList.toggle('active', i < n);
+    document.getElementById('capLabel').textContent = `${n} / 5 online`;
+  } catch(e) {}
+}
+
+function copyLink(elId, btn) {
+  const txt = document.getElementById(elId).textContent.trim();
+  if (!txt || txt.includes('Not') || txt.includes('Loading')) return;
+  navigator.clipboard.writeText(txt).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = '✓ Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+function joinChat() {
+  const name = document.getElementById('nameInput').value.trim();
+  if (!name) { showErr('Please enter your name'); return; }
+  if (name.length < 2) { showErr('Name must be at least 2 characters'); return; }
+  sessionStorage.setItem('db_name', name);
+  window.location.href = '/chat.html';
+}
+
+function showErr(msg) {
+  const el = document.getElementById('errMsg');
+  el.textContent = msg;
+  el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 3000);
+}
+
+document.getElementById('nameInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') joinChat();
+});
+
+loadInfo();
+loadUsers();
+setInterval(loadUsers, 3000);
+setInterval(loadInfo, 5000); // auto-refresh until ngrok is ready
+</script>
+</body>
+</html>

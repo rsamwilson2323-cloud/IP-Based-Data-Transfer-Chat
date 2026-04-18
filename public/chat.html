@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>DataBridge – Chat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080c14;--surface:#0d1520;--surface2:#111b2b;
+  --border:#1a2e48;--border2:#243d5c;
+  --accent:#00d4ff;--accent2:#00ff9d;--warn:#ff6b35;--danger:#ff3e6c;
+  --text:#c8dff0;--muted:#4a6a8a;
+  --self-bg:#0a2240;--other-bg:#0d1a2e;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);font-family:'Exo 2',sans-serif;color:var(--text);display:flex;flex-direction:column;}
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:linear-gradient(rgba(0,212,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,.025) 1px,transparent 1px);
+  background-size:40px 40px;pointer-events:none;z-index:0;
+}
+/* HEADER */
+#header{position:relative;z-index:10;background:var(--surface);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0;}
+.logo-sm{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;letter-spacing:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;flex-shrink:0;}
+#userStrip{display:flex;gap:6px;flex:1;flex-wrap:wrap;}
+.user-chip{display:flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border2);border-radius:20px;padding:3px 10px 3px 6px;font-size:12px;animation:chipIn .3s ease;}
+@keyframes chipIn{from{opacity:0;transform:scale(.8)}}
+.user-chip .avatar{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#000;}
+.self-badge{color:var(--muted);font-size:10px}
+#roomInfo{font-size:11px;color:var(--muted);text-align:right;white-space:nowrap}
+/* MESSAGES */
+#messagesWrap{flex:1;overflow-y:auto;overflow-x:hidden;position:relative;z-index:1;padding:16px 12px;display:flex;flex-direction:column;gap:8px;scroll-behavior:smooth;}
+#messagesWrap::-webkit-scrollbar{width:4px}
+#messagesWrap::-webkit-scrollbar-track{background:transparent}
+#messagesWrap::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+.sys-evt{text-align:center;font-size:12px;color:var(--muted);font-family:'Share Tech Mono',monospace;padding:4px 0;}
+.sys-evt span{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:3px 14px;}
+.msg{display:flex;flex-direction:column;max-width:75%;animation:msgIn .25s ease;}
+@keyframes msgIn{from{opacity:0;transform:translateY(8px)}}
+.msg.self{align-self:flex-end;align-items:flex-end}
+.msg.other{align-self:flex-start;align-items:flex-start}
+.msg-meta{font-size:11px;color:var(--muted);margin-bottom:3px;display:flex;align-items:center;gap:6px;}
+.msg-meta .name{font-weight:700}
+.msg-meta .time{font-family:'Share Tech Mono',monospace}
+.bubble{padding:10px 14px;border-radius:14px;line-height:1.5;font-size:14px;word-break:break-word;}
+.msg.self .bubble{background:var(--self-bg);border:1px solid rgba(0,212,255,.25);border-bottom-right-radius:4px;}
+.msg.other .bubble{background:var(--other-bg);border:1px solid var(--border);border-bottom-left-radius:4px;}
+.edited-tag{font-size:10px;color:var(--muted);font-style:italic}
+.priv-badge{font-size:10px;color:var(--warn);border:1px solid var(--warn);border-radius:10px;padding:1px 7px;margin-left:4px;}
+.file-item{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border);}
+.file-item:last-child{border-bottom:none}
+.file-icon{font-size:20px}
+.file-info{flex:1;min-width:0}
+.file-name{font-family:'Share Tech Mono',monospace;font-size:13px;color:var(--accent);text-decoration:none;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.file-name:hover{text-decoration:underline}
+.file-size{font-size:11px;color:var(--muted)}
+/* PROGRESS */
+.upload-progress{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;min-width:260px;}
+.progress-label{font-size:12px;color:var(--muted);margin-bottom:6px;word-break:break-all}
+.progress-bar-wrap{background:var(--border);border-radius:4px;height:8px;overflow:hidden}
+.progress-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0%;transition:width .15s linear;}
+.progress-pct{font-size:12px;color:var(--accent);font-family:'Share Tech Mono',monospace;margin-top:5px}
+/* ACTIONS */
+.msg-actions{display:none;gap:4px;margin-top:4px;}
+.msg:hover .msg-actions{display:flex}
+.act-btn{background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:2px 8px;font-size:11px;color:var(--muted);cursor:pointer;transition:all .15s;}
+.act-btn:hover{border-color:var(--accent);color:var(--accent)}
+.act-btn.del:hover{border-color:var(--danger);color:var(--danger)}
+#typingBar{height:18px;font-size:12px;color:var(--muted);padding:0 14px;font-style:italic;flex-shrink:0;}
+/* BOTTOM */
+#bottomBar{position:relative;z-index:10;background:var(--surface);border-top:1px solid var(--border);padding:10px 12px;flex-shrink:0;}
+#stickerRow{display:none;gap:8px;flex-wrap:wrap;padding:8px 0;border-bottom:1px solid var(--border);margin-bottom:8px;}
+.input-row{display:flex;align-items:center;gap:8px}
+.icon-btn{width:38px;height:38px;border-radius:8px;background:var(--surface2);border:1px solid var(--border2);color:var(--muted);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;flex-shrink:0;}
+.icon-btn:hover{border-color:var(--accent);color:var(--accent)}
+.icon-btn.active{border-color:var(--accent2);color:var(--accent2)}
+#msgInput{flex:1;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:9px 14px;color:var(--text);font-size:14px;font-family:'Exo 2',sans-serif;outline:none;transition:border-color .2s;resize:none;min-height:38px;max-height:100px;line-height:1.4;}
+#msgInput:focus{border-color:var(--accent)}
+.send-btn{width:44px;height:38px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#000;font-size:18px;cursor:pointer;flex-shrink:0;transition:opacity .15s,transform .1s;}
+.send-btn:hover{opacity:.85}
+.send-btn:active{transform:scale(.95)}
+/* MODALS */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:100;display:none;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:24px;width:min(400px,90vw);animation:modalIn .25s ease;}
+@keyframes modalIn{from{opacity:0;transform:scale(.9)}}
+.modal h3{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;color:var(--accent);letter-spacing:1px;margin-bottom:16px;}
+.modal-file-list{margin-bottom:14px;max-height:140px;overflow-y:auto}
+.modal-file-entry{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:13px;font-family:'Share Tech Mono',monospace;color:var(--accent2);word-break:break-all;}
+.recipient-list{margin-bottom:16px}
+.recipient-list label{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;cursor:pointer;font-size:14px;transition:background .15s;}
+.recipient-list label:hover{background:var(--surface2)}
+.recipient-list input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end}
+.btn-cancel{background:transparent;border:1px solid var(--border2);color:var(--muted);border-radius:8px;padding:8px 18px;cursor:pointer;font-family:'Exo 2',sans-serif;font-size:14px;transition:border-color .15s;}
+.btn-cancel:hover{border-color:var(--danger);color:var(--danger)}
+.btn-send{background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#000;border-radius:8px;padding:8px 22px;cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;letter-spacing:1px;}
+.modal input[type=text]{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 14px;color:var(--text);font-size:14px;font-family:'Exo 2',sans-serif;outline:none;margin-bottom:14px;transition:border-color .2s;}
+.modal input[type=text]:focus{border-color:var(--accent)}
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div class="logo-sm">⚡ DB</div>
+  <div id="userStrip"></div>
+  <div id="roomInfo">0/5</div>
+</div>
+
+<div id="messagesWrap"></div>
+<div id="typingBar"></div>
+
+<div id="bottomBar">
+  <div id="stickerRow"></div>
+  <div class="input-row">
+    <div class="icon-btn" id="stickerBtn" title="Stickers" onclick="toggleStickers()">🎨</div>
+    <label class="icon-btn" title="Send File(s)" style="cursor:pointer">
+      📎
+      <input type="file" id="fileInput" multiple style="display:none" onchange="onFilesSelected()">
+    </label>
+    <textarea id="msgInput" placeholder="Type a message..." rows="1"
+      oninput="autoGrow(this);emitTyping()"
+      onkeydown="msgKeydown(event)"></textarea>
+    <button class="send-btn" onclick="sendText()">➤</button>
+  </div>
+</div>
+
+<!-- FILE MODAL -->
+<div class="modal-overlay" id="fileModal">
+  <div class="modal">
+    <h3>📤 Send Files</h3>
+    <div class="modal-file-list" id="modalFileList"></div>
+    <div class="recipient-list" id="recipientList"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeFileModal()">Cancel</button>
+      <button class="btn-send" onclick="confirmSend()">SEND →</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <h3>✏️ Edit Message</h3>
+    <input type="text" id="editInput" placeholder="New message text...">
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeEditModal()">Cancel</button>
+      <button class="btn-send" onclick="confirmEdit()">SAVE</button>
+    </div>
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+const myName = sessionStorage.getItem('db_name');
+if (!myName) { window.location.href = '/'; }
+
+let myId         = null;
+let allUsers     = [];
+let pendingFiles = [];   // populated by onFilesSelected(), read by confirmSend()
+let editingMsgId = null;
+let typingTimer  = null;
+let typingSent   = false;
+
+const COLORS   = ['#00d4ff','#00ff9d','#ff6b35','#c77dff','#ffd60a'];
+const STICKERS = ['😂','😍','🔥','👊','💀','🥳','😭','🤯','💯','⚡','🎉','👀','😤','🙏','💪'];
+
+// ── Socket ─────────────────────────────────────────────────────────────────
+const socket = io();
+socket.emit('join', { name: myName });
+
+socket.on('join_error', msg => { alert('Cannot join: ' + msg); window.location.href = '/'; });
+
+socket.on('join_ok', ({ id, history }) => {
+  myId = id;
+  history.forEach(renderItem);
+  scrollBottom();
+});
+
+socket.on('users_update', users => { allUsers = users; renderUsers(users); });
+socket.on('system_event', evt  => { renderItem(evt); scrollBottom(); });
+socket.on('new_message',  msg  => { renderItem(msg);  scrollBottom(); });
+
+socket.on('message_edited', ({ msgId, newText }) => {
+  const el = document.getElementById('bubble-' + msgId);
+  if (el) el.innerHTML = escHtml(newText) + ' <span class="edited-tag">(edited)</span>';
+});
+
+socket.on('message_deleted', ({ msgId }) => {
+  const el = document.getElementById('msg-' + msgId);
+  if (el) el.remove();
+});
+
+socket.on('user_typing', ({ name }) => {
+  const bar = document.getElementById('typingBar');
+  bar.textContent = name + ' is typing...';
+  clearTimeout(typingTimer);
+  typingTimer = setTimeout(() => bar.textContent = '', 2000);
+});
+
+// ── Render users ───────────────────────────────────────────────────────────
+function renderUsers(users) {
+  const strip = document.getElementById('userStrip');
+  strip.innerHTML = '';
+  users.forEach((u, i) => {
+    const c = COLORS[i % COLORS.length];
+    strip.innerHTML += `
+      <div class="user-chip">
+        <div class="avatar" style="background:${c}">${u.name.slice(0,2).toUpperCase()}</div>
+        <span>${escHtml(u.name)}</span>
+        ${u.id === myId ? '<span class="self-badge">(you)</span>' : ''}
+      </div>`;
+  });
+  document.getElementById('roomInfo').textContent = users.length + '/5';
+}
+
+// ── Render item ────────────────────────────────────────────────────────────
+function renderItem(item) {
+  const wrap = document.getElementById('messagesWrap');
+
+  if (item.type === 'system') {
+    const d = document.createElement('div');
+    d.className = 'sys-evt';
+    d.innerHTML = `<span>${escHtml(item.text)} · <span style="font-size:10px">${fmtTime(item.time)}</span></span>`;
+    wrap.appendChild(d);
+    return;
+  }
+
+  const isMe   = item.fromId === myId;
+  const idx    = allUsers.findIndex(u => u.name === item.from);
+  const color  = COLORS[idx >= 0 ? idx % COLORS.length : 0];
+  const isPriv = item.targets && !item.targets.includes('all');
+
+  const msgEl = document.createElement('div');
+  msgEl.className = 'msg ' + (isMe ? 'self' : 'other');
+  msgEl.id = 'msg-' + item.id;
+
+  let bubbleContent = '';
+  if (item.type === 'text') {
+    bubbleContent = `<span id="bubble-${item.id}">${escHtml(item.text)}${item.edited ? ' <span class="edited-tag">(edited)</span>' : ''}</span>`;
+  } else if (item.type === 'file') {
+    bubbleContent = item.files.map(f => `
+      <div class="file-item">
+        <div class="file-icon">${fileIcon(f.originalName)}</div>
+        <div class="file-info">
+          <a class="file-name" href="${f.url}" target="_blank">${escHtml(f.originalName)}</a>
+          <div class="file-size">${fmtSize(f.size)}</div>
+        </div>
+      </div>`).join('');
+  } else if (item.type === 'sticker') {
+    bubbleContent = `<span style="font-size:48px;line-height:1">${item.url}</span>`;
+  }
+
+  msgEl.innerHTML = `
+    <div class="msg-meta">
+      <span class="name" style="color:${isMe ? 'var(--accent2)' : color}">${escHtml(item.from)}</span>
+      ${isPriv ? '<span class="priv-badge">🔒 private</span>' : ''}
+      <span class="time">${fmtTime(item.time)}</span>
+    </div>
+    <div class="bubble">${bubbleContent}</div>
+    ${isMe && item.type === 'text' ? `
+    <div class="msg-actions">
+      <button class="act-btn" onclick="startEdit('${item.id}')">✏️ Edit</button>
+      <button class="act-btn del" onclick="deleteMsg('${item.id}')">🗑️ Delete</button>
+    </div>` : ''}`;
+
+  wrap.appendChild(msgEl);
+}
+
+// ── Text ───────────────────────────────────────────────────────────────────
+function sendText() {
+  const inp = document.getElementById('msgInput');
+  const text = inp.value.trim();
+  if (!text) return;
+  socket.emit('message', { text, targets: ['all'] });
+  inp.value = '';
+  inp.style.height = '';
+}
+function msgKeydown(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendText(); } }
+function autoGrow(el) { el.style.height = ''; el.style.height = Math.min(el.scrollHeight, 100) + 'px'; }
+function emitTyping() {
+  if (!typingSent) { socket.emit('typing'); typingSent = true; setTimeout(() => typingSent = false, 1500); }
+}
+
+// ── File selection → modal ─────────────────────────────────────────────────
+function onFilesSelected() {
+  const files = Array.from(document.getElementById('fileInput').files);
+  if (!files.length) return;
+  pendingFiles = files;                             // store for later use by confirmSend
+  openFileModal(files);
+  document.getElementById('fileInput').value = '';  // reset so same file can re-trigger
+}
+
+function openFileModal(files) {
+  document.getElementById('modalFileList').innerHTML = files.map(f =>
+    `<div class="modal-file-entry">📄 ${escHtml(f.name)}<span style="color:var(--muted);margin-left:8px;font-size:11px">${fmtSize(f.size)}</span></div>`
+  ).join('');
+
+  const others = allUsers.filter(u => u.id !== myId);
+  let html = `<label><input type="checkbox" value="all" onchange="handleAllCheck(this)"> 📢 Send to Everyone</label>`;
+  others.forEach(u => {
+    html += `<label><input type="checkbox" value="${u.id}"> ${escHtml(u.name)}</label>`;
+  });
+  document.getElementById('recipientList').innerHTML = html;
+  document.getElementById('fileModal').classList.add('open');
+}
+
+function handleAllCheck(cb) {
+  document.querySelectorAll('#recipientList input[type=checkbox]:not([value=all])')
+    .forEach(b => b.checked = cb.checked);
+}
+
+function closeFileModal() {
+  document.getElementById('fileModal').classList.remove('open');
+  // NOTE: pendingFiles is NOT cleared here.
+  // confirmSend() snapshots them first, then clears.
+}
+
+// ── Upload & send (FIXED) ──────────────────────────────────────────────────
+async function confirmSend() {
+  const checked = Array.from(document.querySelectorAll('#recipientList input:checked'));
+  if (!checked.length) { alert('Please select at least one recipient'); return; }
+
+  const targets = checked.some(c => c.value === 'all')
+    ? ['all']
+    : checked.map(c => c.value);
+
+  // FIX 1: Snapshot files BEFORE closing the modal (closing modal must NOT clear them)
+  const filesToSend = pendingFiles.slice();
+  pendingFiles = [];
+  closeFileModal();
+
+  const wrap = document.getElementById('messagesWrap');
+
+  for (let i = 0; i < filesToSend.length; i++) {
+    const file = filesToSend[i];
+
+    // FIX 2: Every file gets its own ID — no ID collision between simultaneous uploads
+    const uid = 'up' + Date.now() + '_' + i;
+
+    // Progress bubble
+    const progEl = document.createElement('div');
+    progEl.className = 'msg self';
+    progEl.innerHTML = `
+      <div class="msg-meta">
+        <span class="name" style="color:var(--accent2)">${escHtml(myName)}</span>
+        <span class="time">${fmtTime(Date.now())}</span>
+      </div>
+      <div class="upload-progress">
+        <div class="progress-label">📤 ${escHtml(file.name)}</div>
+        <div class="progress-bar-wrap"><div class="progress-bar-fill" id="bar${uid}"></div></div>
+        <div class="progress-pct" id="pct${uid}">0%  –  ${fmtSize(file.size)}</div>
+      </div>`;
+    wrap.appendChild(progEl);
+    scrollBottom();
+
+    const fd = new FormData();
+    fd.append('files', file);
+
+    // FIX 3: Never reject() — always resolve() so next file still uploads; errors shown in chat
+    await new Promise(resolve => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', '/api/upload');
+
+      xhr.upload.addEventListener('progress', e => {
+        if (!e.lengthComputable) return;
+        const pct   = Math.round(e.loaded / e.total * 100);
+        const barEl = document.getElementById('bar' + uid);
+        const pctEl = document.getElementById('pct' + uid);
+        if (barEl) barEl.style.width = pct + '%';
+        if (pctEl) pctEl.textContent  = pct + '%  –  ' + fmtSize(e.loaded) + ' / ' + fmtSize(e.total);
+      });
+
+      xhr.onload = () => {
+        progEl.remove();
+        if (xhr.status === 200) {
+          try {
+            const resp = JSON.parse(xhr.responseText);
+            socket.emit('file_message', { files: resp.files, targets });
+          } catch (err) {
+            showSysMsg('⚠️ Server error for: ' + file.name);
+          }
+        } else {
+          showSysMsg('❌ Upload failed (HTTP ' + xhr.status + ') – ' + file.name);
+        }
+        resolve();
+      };
+
+      xhr.onerror   = () => { progEl.remove(); showSysMsg('❌ Network error – ' + file.name); resolve(); };
+      xhr.ontimeout = () => { progEl.remove(); showSysMsg('❌ Timeout – ' + file.name);       resolve(); };
+
+      xhr.send(fd);
+    });
+  }
+}
+
+function showSysMsg(text) {
+  const d = document.createElement('div');
+  d.className = 'sys-evt';
+  d.innerHTML = `<span style="color:var(--warn)">${escHtml(text)}</span>`;
+  document.getElementById('messagesWrap').appendChild(d);
+  scrollBottom();
+}
+
+// ── Stickers ───────────────────────────────────────────────────────────────
+function toggleStickers() {
+  const row = document.getElementById('stickerRow');
+  const btn = document.getElementById('stickerBtn');
+  const open = row.style.display === 'flex';
+  if (!open && !row.children.length) buildStickerRow();
+  row.style.display = open ? 'none' : 'flex';
+  btn.classList.toggle('active', !open);
+}
+
+function buildStickerRow() {
+  const row = document.getElementById('stickerRow');
+  STICKERS.forEach(s => {
+    const el = document.createElement('div');
+    el.style.cssText = 'font-size:36px;cursor:pointer;transition:transform .15s;user-select:none;padding:2px';
+    el.textContent = s;
+    el.onmouseenter = () => el.style.transform = 'scale(1.3)';
+    el.onmouseleave = () => el.style.transform  = '';
+    el.onclick = () => {
+      socket.emit('sticker', { url: s, targets: ['all'] });
+      document.getElementById('stickerRow').style.display = 'none';
+      document.getElementById('stickerBtn').classList.remove('active');
+    };
+    row.appendChild(el);
+  });
+}
+
+// ── Edit / Delete ──────────────────────────────────────────────────────────
+function startEdit(msgId) {
+  editingMsgId = msgId;
+  const bubble = document.getElementById('bubble-' + msgId);
+  document.getElementById('editInput').value =
+    bubble ? bubble.textContent.replace('(edited)', '').trim() : '';
+  document.getElementById('editModal').classList.add('open');
+}
+
+function confirmEdit() {
+  const newText = document.getElementById('editInput').value.trim();
+  if (!newText) return;
+  socket.emit('edit_message', { msgId: editingMsgId, newText });
+  closeEditModal();
+}
+
+function closeEditModal() { document.getElementById('editModal').classList.remove('open'); editingMsgId = null; }
+
+function deleteMsg(msgId) {
+  if (confirm('Delete this message?')) socket.emit('delete_message', { msgId });
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+function scrollBottom() {
+  const w = document.getElementById('messagesWrap');
+  w.scrollTop = w.scrollHeight;
+}
+
+function fmtTime(ts) {
+  if (!ts) return '';
+  return new Date(ts).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+}
+
+function fmtSize(bytes) {
+  if (!bytes || bytes === 0) return '0 B';
+  if (bytes < 1024)          return bytes + ' B';
+  if (bytes < 1048576)       return (bytes / 1024).toFixed(1) + ' KB';
+  if (bytes < 1073741824)    return (bytes / 1048576).toFixed(1) + ' MB';
+  return (bytes / 1073741824).toFixed(2) + ' GB';
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function fileIcon(name) {
+  const ext = (name || '').split('.').pop().toLowerCase();
+  return ({
+    mp4:'🎬',mkv:'🎬',avi:'🎬',mov:'🎬',webm:'🎬',
+    mp3:'🎵',wav:'🎵',flac:'🎵',aac:'🎵',
+    jpg:'🖼️',jpeg:'🖼️',png:'🖼️',gif:'🖼️',webp:'🖼️',
+    pdf:'📄',doc:'📝',docx:'📝',txt:'📝',ppt:'📊',xlsx:'📊',
+    zip:'🗜️',rar:'🗜️','7z':'🗜️',
+    apk:'📱',exe:'💻',dmg:'💻',
+  })[ext] || '📁';
+}
+
+document.getElementById('fileModal').addEventListener('click', function(e){ if(e.target===this) closeFileModal(); });
+document.getElementById('editModal').addEventListener('click', function(e){ if(e.target===this) closeEditModal(); });
+</script>
+</body>
+</html>
