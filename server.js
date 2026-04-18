@@ -227,7 +227,7 @@ server.listen(PORT, '0.0.0.0', async () => {
 
   try {
     const ngrok = require('@ngrok/ngrok');
-    const NGROK_AUTHTOKEN = '3CWxzAZuN34XxaMqrVQBynw1wOb_3YyHULnTcjjrrpmFuP3CT';
+    const NGROK_AUTHTOKEN = 'PASTE_YOUR_NGROK_AUTHTOKEN_HERE';
     const listener = await ngrok.forward({ addr: PORT, authtoken: NGROK_AUTHTOKEN });
     publicURL = listener.url();
 
