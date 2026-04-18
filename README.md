@@ -126,7 +126,7 @@ The `ngrok-v3-stable-windows-amd64` folder contains everything needed for intern
 └──────────────────────────────────────────────────┘
 ```
 
-Share this link with anyone — they can join from **Coimbatore, Tirunelveli, or anywhere in the world.**
+Share this link with anyone — they can join from **Anywhere in the world.**
 
 ---
 
